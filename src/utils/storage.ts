@@ -15,6 +15,7 @@ export function getDefaultStudyData(): UserStudyData {
     quizHistory: [],
     soundEnabled: true,
     theme: 'light',
+    writingProgress: {},
   };
 }
 
@@ -173,6 +174,74 @@ export function setFlashcardStatus(
   const withStreak = updateStreak(updated);
   saveStudyData(withStreak);
   return withStreak;
+}
+
+export function recordCharacterWriting(
+  data: UserStudyData,
+  charId: string,
+  isSuccess: boolean,
+  isTracing: boolean,
+  usedHint: boolean
+): UserStudyData {
+  const current = data.writingProgress[charId] || {
+    status: 'not-started',
+    attemptsCount: 0,
+    successfulCount: 0,
+    tracingCompleted: false,
+    lastAttemptDate: 0,
+    consecutiveSuccesses: 0,
+    hintsUsedCount: 0,
+  };
+
+  const newAttempts = current.attemptsCount + 1;
+  const newSuccessCount = current.successfulCount + (isSuccess ? 1 : 0);
+  const newConsecutive = isSuccess ? current.consecutiveSuccesses + 1 : 0;
+  const newHints = current.hintsUsedCount + (usedHint ? 1 : 0);
+  const now = Date.now();
+
+  let newStatus = current.status;
+  if (isTracing) {
+    if (newStatus === 'not-started') newStatus = 'learning';
+  } else {
+    // Independent writing criteria:
+    // At least 2 consecutive successes without hint = 'mastered'
+    if (isSuccess && newConsecutive >= 2 && !usedHint) {
+      newStatus = 'mastered';
+    } else if (isSuccess) {
+      newStatus = 'learning';
+    } else {
+      newStatus = 'needs-practice';
+    }
+  }
+
+  const updated: UserStudyData = {
+    ...data,
+    writingProgress: {
+      ...data.writingProgress,
+      [charId]: {
+        status: newStatus,
+        attemptsCount: newAttempts,
+        successfulCount: newSuccessCount,
+        tracingCompleted: current.tracingCompleted || isTracing,
+        lastAttemptDate: now,
+        consecutiveSuccesses: newConsecutive,
+        hintsUsedCount: newHints,
+      },
+    },
+  };
+
+  const withStreak = updateStreak(updated);
+  saveStudyData(withStreak);
+  return withStreak;
+}
+
+export function resetWritingProgress(data: UserStudyData): UserStudyData {
+  const updated: UserStudyData = {
+    ...data,
+    writingProgress: {},
+  };
+  saveStudyData(updated);
+  return updated;
 }
 
 export function clearAllProgress(): UserStudyData {

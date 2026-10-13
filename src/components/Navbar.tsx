@@ -15,7 +15,8 @@ import {
   Search,
   Compass,
   Printer,
-  FileCheck
+  FileCheck,
+  Edit3
 } from 'lucide-react';
 import { UserStudyData } from '../types';
 import { exportDataAsJson } from '../utils/storage';
@@ -23,6 +24,7 @@ import { exportDataAsJson } from '../utils/storage';
 export type ActiveTab =
   | 'dashboard'
   | 'quiz'
+  | 'writing'
   | 'flashcards'
   | 'smart-review'
   | 'mock-exam'
@@ -52,6 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'quiz', label: 'Practice Quiz', icon: <CheckCircle2 className="w-4 h-4" /> },
+    { id: 'writing', label: 'Write Hiragana', icon: <Edit3 className="w-4 h-4" /> },
     { id: 'mock-exam', label: 'Mock Exam', icon: <FileCheck className="w-4 h-4" /> },
     { id: 'smart-review', label: 'Smart Review', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'flashcards', label: 'Flashcards', icon: <Layers className="w-4 h-4" /> },

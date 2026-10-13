@@ -10,7 +10,8 @@ import {
   RotateCcw,
   BookOpen,
   Layers,
-  GraduationCap
+  GraduationCap,
+  Edit3
 } from 'lucide-react';
 import { UserStudyData, ModuleId } from '../types';
 import { MODULES } from '../data/modules';
@@ -23,6 +24,7 @@ interface DashboardProps {
   onNavigateToSmartReview: () => void;
   onNavigateToFlashcards: () => void;
   onNavigateToQuickStudy: () => void;
+  onNavigateToWriting: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -32,6 +34,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onNavigateToSmartReview,
   onNavigateToFlashcards,
   onNavigateToQuickStudy,
+  onNavigateToWriting,
 }) => {
   // Compute real statistics
   const totalQuestions = ALL_QUESTIONS.length;
@@ -88,6 +91,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
     (f) => !f.known
   ).length;
 
+  // Writing tutor progress metrics
+  const writingProgress = studyData.writingProgress || {};
+  let masteredWritingCount = 0;
+  let learningWritingCount = 0;
+  let needsPracticeWritingCount = 0;
+  Object.values(writingProgress).forEach((item) => {
+    if (item.status === 'mastered') masteredWritingCount++;
+    else if (item.status === 'learning') learningWritingCount++;
+    else if (item.status === 'needs-practice') needsPracticeWritingCount++;
+  });
+
   const isBrandNewUser = totalAttempts === 0;
 
   return (
@@ -130,6 +144,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             >
               <GraduationCap className="w-4 h-4" />
               5-Min Cram Sheet
+            </button>
+            <button
+              onClick={onNavigateToWriting}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 hover:text-white font-medium text-sm transition-colors cursor-pointer border border-rose-400/30"
+            >
+              <Edit3 className="w-4 h-4 text-rose-400" />
+              Write Hiragana Tutor
             </button>
           </div>
         </div>
@@ -331,6 +352,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </section>
       )}
 
+      {/* Dedicated Interactive Hiragana Writing Tutor Section */}
+      <section className="bg-gradient-to-r from-stone-900 via-slate-900 to-rose-950 rounded-2xl p-6 sm:p-7 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="relative z-10 space-y-2 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-semibold">
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Interactive Writing Lab · Dakuten, Handakuten & Digraphs</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            Hiragana Writing Tutor & Stroke Order Lab
+          </h2>
+          <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+            Practice stroke-by-stroke animation, guided tracing, and memory recall on an authentic Genkouyoushi calligraphy canvas. Master Lesson 1.2 diacritics (が, ざ, だ, ば, ぱ) and Lesson 1.3 digraphs (きゃ, しゃ, ちゃ) with instant stroke-count validation.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
+            <span className="bg-white/10 px-2.5 py-1 rounded-md text-emerald-300 font-semibold">
+              Mastered: {masteredWritingCount}
+            </span>
+            <span className="bg-white/10 px-2.5 py-1 rounded-md text-blue-300 font-semibold">
+              Learning: {learningWritingCount}
+            </span>
+            <span className="bg-white/10 px-2.5 py-1 rounded-md text-amber-300 font-semibold">
+              Needs Practice: {needsPracticeWritingCount}
+            </span>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col gap-3 shrink-0 w-full sm:w-auto">
+          <button
+            onClick={onNavigateToWriting}
+            className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+          >
+            <Edit3 className="w-4 h-4" />
+            Practice Writing Hiragana
+          </button>
+        </div>
+
+        {/* Japanese Calligraphy visual watermark */}
+        <div className="absolute right-4 -bottom-6 text-8xl font-jp font-extrabold text-white/5 select-none pointer-events-none">
+          書道
+        </div>
+      </section>
+
       {/* All 9 Modules Study Grid */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -418,12 +482,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <span className="text-[11px] text-stone-600 truncate max-w-[150px]" title={item.module.sourcePdfName}>
                       {item.module.sourcePdfName.split(' - ')[1] || item.module.sourcePdfName}
                     </span>
-                    <button
-                      onClick={() => onNavigateToQuiz(item.module.id)}
-                      className="px-3 py-1.5 bg-stone-100 hover:bg-rose-700 hover:text-white text-slate-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                    >
-                      Start Quiz
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {(item.module.id === 'module-1' || item.module.id === 'module-2') && (
+                        <button
+                          onClick={onNavigateToWriting}
+                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                          title="Practice writing characters in tutor"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Write</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onNavigateToQuiz(item.module.id)}
+                        className="px-3 py-1.5 bg-stone-100 hover:bg-rose-700 hover:text-white text-slate-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Start Quiz
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

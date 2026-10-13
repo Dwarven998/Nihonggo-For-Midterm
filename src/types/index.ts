@@ -73,6 +73,41 @@ export interface QuizAttemptRecord {
   correctQuestionIds: string[];
 }
 
+export type CharacterGroup = 'basic' | 'diacritics' | 'digraphs' | 'sokuon';
+
+export type MasteryStatus = 'not-started' | 'learning' | 'needs-practice' | 'mastered';
+
+export interface CharacterStroke {
+  order: number;
+  path: string; // SVG path data (viewBox 0 0 100 100)
+  startPoint: { x: number; y: number };
+  endPoint: { x: number; y: number };
+  directionTip: string;
+}
+
+export interface HiraganaCharacter {
+  id: string;
+  character: string;
+  romaji: string;
+  group: CharacterGroup;
+  subGroup: string; // e.g. "Vowels", "Ka-row", "Dakuten Ga-row", "Digraphs (Kya-row)"
+  strokeCount: number;
+  writingTip: string;
+  soundGuide: string;
+  isCoursePrimary: boolean; // true for Lesson 1.2/1.3/1.4/1.5 characters; false for foundational basic chart
+  strokes: CharacterStroke[];
+}
+
+export interface CharacterWritingStat {
+  status: MasteryStatus;
+  attemptsCount: number;
+  successfulCount: number;
+  tracingCompleted: boolean;
+  lastAttemptDate: number;
+  consecutiveSuccesses: number;
+  hintsUsedCount: number;
+}
+
 export interface UserStudyData {
   version: number;
   streakCount: number;
@@ -102,6 +137,7 @@ export interface UserStudyData {
   quizHistory: QuizAttemptRecord[];
   soundEnabled: boolean;
   theme: 'light' | 'dark';
+  writingProgress: Record<string, CharacterWritingStat>;
 }
 
 export interface ExamConfig {
@@ -121,3 +157,4 @@ export interface VocabularyItem {
   exampleEnglish?: string;
   note?: string;
 }
+

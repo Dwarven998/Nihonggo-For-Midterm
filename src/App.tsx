@@ -6,12 +6,15 @@ import {
   recordQuizAttempt,
   toggleQuestionBookmark,
   setFlashcardStatus,
+  recordCharacterWriting,
+  resetWritingProgress,
   clearAllProgress
 } from './utils/storage';
 import { UserStudyData, ModuleId, QuizAttemptRecord } from './types';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { PracticeQuiz } from './components/PracticeQuiz';
+import { HiraganaWritingDashboard } from './components/writing/HiraganaWritingDashboard';
 import { FlashcardsView } from './components/FlashcardsView';
 import { SmartReview } from './components/SmartReview';
 import { TimedMockExam } from './components/TimedMockExam';
@@ -48,6 +51,21 @@ export default function App() {
 
   const handleSetFlashcardStatus = (cardId: string, known: boolean) => {
     setStudyData((prev) => setFlashcardStatus(prev, cardId, known));
+  };
+
+  const handleRecordWriting = (
+    charId: string,
+    isSuccess: boolean,
+    isTracing: boolean,
+    usedHint: boolean
+  ) => {
+    setStudyData((prev) =>
+      recordCharacterWriting(prev, charId, isSuccess, isTracing, usedHint)
+    );
+  };
+
+  const handleResetWriting = () => {
+    setStudyData((prev) => resetWritingProgress(prev));
   };
 
   const handleToggleSound = () => {
@@ -91,6 +109,7 @@ export default function App() {
             onNavigateToSmartReview={() => setActiveTab('smart-review')}
             onNavigateToFlashcards={() => setActiveTab('flashcards')}
             onNavigateToQuickStudy={() => setActiveTab('quick-study')}
+            onNavigateToWriting={() => setActiveTab('writing')}
           />
         )}
 
@@ -102,6 +121,15 @@ export default function App() {
             onRecordAnswer={handleRecordAnswer}
             onRecordQuizAttempt={handleRecordQuizAttempt}
             onToggleBookmark={handleToggleBookmark}
+            onBackToDashboard={() => setActiveTab('dashboard')}
+          />
+        )}
+
+        {activeTab === 'writing' && (
+          <HiraganaWritingDashboard
+            studyData={studyData}
+            onRecordCharacterWriting={handleRecordWriting}
+            onResetWritingProgress={handleResetWriting}
             onBackToDashboard={() => setActiveTab('dashboard')}
           />
         )}
