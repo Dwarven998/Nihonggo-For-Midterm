@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif;
+    --font-japanese: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  .font-jp {
+    font-family: var(--font-japanese);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .page-break {
+    page-break-after: always;
+  }
+}

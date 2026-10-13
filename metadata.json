@@ -1,0 +1,6 @@
+{
+  "name": "Nihongo Exam Pro - Japanese Midterm Review",
+  "description": "Comprehensive interactive Japanese midterm exam study platform with mock exams, smart spaced repetition, flashcards, and verified curriculum question banks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
