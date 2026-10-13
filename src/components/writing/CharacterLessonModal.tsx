@@ -17,6 +17,7 @@ import { HiraganaCharacter, CharacterWritingStat } from '../../types';
 import { StrokeOrderAnimator } from './StrokeOrderAnimator';
 import { InteractiveCanvas, WritingEvaluation } from './InteractiveCanvas';
 import { soundManager } from '../../utils/audio';
+import { TanuMascot } from '../mascot/TanuMascot';
 
 type LessonStage = 'intro' | 'watch' | 'trace' | 'write' | 'evaluate';
 
@@ -138,17 +139,25 @@ export const CharacterLessonModal: React.FC<CharacterLessonModalProps> = ({
                 </div>
               </div>
 
-              {/* Stroke Count & Tip Card */}
-              <div className="bg-stone-50 border border-stone-200/90 rounded-xl p-4 text-left space-y-2 text-xs">
+              {/* Stroke Count & Tip Card with Tanu Explaining */}
+              <div className="bg-stone-50 border border-stone-200/90 rounded-xl p-4 text-left space-y-3 text-xs">
                 <div className="flex items-center justify-between font-bold text-slate-900">
                   <span>Stroke Count: {character.strokeCount} stroke(s)</span>
-                  <span className="text-stone-400 capitalize">
+                  <span className="text-stone-500 capitalize">
                     Status: {currentStat?.status || 'Not started'}
                   </span>
                 </div>
-                <p className="text-stone-700 leading-relaxed">
-                  <strong>Writing Advice:</strong> {character.writingTip}
-                </p>
+                <div className="flex items-start gap-3 pt-1">
+                  <TanuMascot
+                    pose="explaining"
+                    size="sm"
+                    hideOnMobile={true}
+                    alt="Tanu explaining character writing tip"
+                  />
+                  <p className="text-stone-700 leading-relaxed flex-1">
+                    <strong className="text-slate-900">Tanu's Writing Advice:</strong> {character.writingTip}
+                  </p>
+                </div>
               </div>
 
               <div className="pt-2 flex justify-center gap-3">
@@ -239,6 +248,18 @@ export const CharacterLessonModal: React.FC<CharacterLessonModalProps> = ({
                 </p>
               </div>
 
+              <div className="flex items-center justify-center gap-2 text-stone-500 text-xs py-1">
+                <TanuMascot
+                  pose="thinking"
+                  size="xs"
+                  hideOnMobile={true}
+                  alt="Tanu thinking pose"
+                />
+                <span>
+                  Tip: Use the crosshair quadrants to balance each stroke!
+                </span>
+              </div>
+
               <InteractiveCanvas
                 character={character}
                 mode="independent"
@@ -251,13 +272,19 @@ export const CharacterLessonModal: React.FC<CharacterLessonModalProps> = ({
           {/* Stage 5: Evaluation & Feedback */}
           {stage === 'evaluate' && lastEvaluation && (
             <div className="space-y-6">
-              <div className="text-center space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Writing Feedback & Evaluation
-                </h3>
-                <p className="text-xs text-stone-500">
-                  Comparing your strokes against the standard reference for {character.character}
-                </p>
+              <div className="flex justify-center">
+                <TanuMascot
+                  pose={lastEvaluation.accuracyGrade === 'great' || lastEvaluation.accuracyGrade === 'good' ? 'success' : 'encouraging'}
+                  size="md"
+                  japaneseTitle={lastEvaluation.accuracyGrade === 'great' || lastEvaluation.accuracyGrade === 'good' ? 'よくできました！' : 'がんばって！'}
+                  message={
+                    lastEvaluation.accuracyGrade === 'great' || lastEvaluation.accuracyGrade === 'good'
+                      ? `Great job! Your stroke count and shape for ${character.character} look well-formed!`
+                      : `Almost there! Practice ${character.character} once more to lock it into memory.`
+                  }
+                  bubblePosition="right"
+                  alt="Tanu evaluation feedback"
+                />
               </div>
 
               {/* Side-by-side comparison */}

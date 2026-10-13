@@ -16,6 +16,7 @@ import {
 import { UserStudyData, ModuleId } from '../types';
 import { MODULES } from '../data/modules';
 import { QUESTIONS_BY_MODULE, ALL_QUESTIONS } from '../data/questions';
+import { TanuMascot } from './mascot/TanuMascot';
 
 interface DashboardProps {
   studyData: UserStudyData;
@@ -108,50 +109,64 @@ export const Dashboard: React.FC<DashboardProps> = ({
     <div className="space-y-8 pb-12">
       {/* Hero Welcome Banner */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-stone-900 via-slate-900 to-rose-950 text-white p-6 sm:p-8 shadow-sm">
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="flex items-center gap-2 text-rose-300 font-medium text-xs tracking-wide">
-            <span className="font-jp text-sm font-semibold">頑張ってください！</span>
-            <span aria-hidden="true">·</span>
-            <span>FL033 Japanese 1 Midterm Exam Preparation</span>
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="max-w-2xl space-y-3">
+            <div className="flex items-center gap-2 text-rose-300 font-medium text-xs tracking-wide">
+              <span className="font-jp text-sm font-semibold">頑張ってください！</span>
+              <span aria-hidden="true">·</span>
+              <span>FL033 Japanese 1 Midterm Exam Preparation</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white text-balance">
+              Master your Japanese Midterm Examination
+            </h1>
+
+            <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+              Complete interactive preparation for all 9 lecture units: Hiragana diacritics & digraphs, greetings, numerals to trillions, basic sentence patterns, Irodori Can Do dialogues, particles (wa, mo, no, ka), and True/False Japanese Culture.
+            </p>
+
+            <div className="pt-2 flex flex-wrap gap-3">
+              <button
+                onClick={onNavigateToMockExam}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition-colors cursor-pointer"
+              >
+                <FileCheck className="w-4 h-4" />
+                Take Timed Mock Exam
+              </button>
+              <button
+                onClick={onNavigateToSmartReview}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                Start Smart Review ({currentlyMissedQuestionsCount} missed)
+              </button>
+              <button
+                onClick={onNavigateToQuickStudy}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-transparent hover:bg-white/10 text-stone-300 hover:text-white font-medium text-sm transition-colors cursor-pointer"
+              >
+                <GraduationCap className="w-4 h-4" />
+                5-Min Cram Sheet
+              </button>
+              <button
+                onClick={onNavigateToWriting}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 hover:text-white font-medium text-sm transition-colors cursor-pointer border border-rose-400/30"
+              >
+                <Edit3 className="w-4 h-4 text-rose-400" />
+                Write Hiragana Tutor
+              </button>
+            </div>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white text-balance">
-            Master your Japanese Midterm Examination
-          </h1>
-
-          <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-            Complete interactive preparation for all 9 lecture units: Hiragana diacritics & digraphs, greetings, numerals to trillions, basic sentence patterns, Irodori Can Do dialogues, particles (wa, mo, no, ka), and True/False Japanese Culture.
-          </p>
-
-          <div className="pt-2 flex flex-wrap gap-3">
-            <button
-              onClick={onNavigateToMockExam}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition-colors cursor-pointer"
-            >
-              <FileCheck className="w-4 h-4" />
-              Take Timed Mock Exam
-            </button>
-            <button
-              onClick={onNavigateToSmartReview}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              Start Smart Review ({currentlyMissedQuestionsCount} missed)
-            </button>
-            <button
-              onClick={onNavigateToQuickStudy}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-transparent hover:bg-white/10 text-stone-300 hover:text-white font-medium text-sm transition-colors cursor-pointer"
-            >
-              <GraduationCap className="w-4 h-4" />
-              5-Min Cram Sheet
-            </button>
-            <button
-              onClick={onNavigateToWriting}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 hover:text-white font-medium text-sm transition-colors cursor-pointer border border-rose-400/30"
-            >
-              <Edit3 className="w-4 h-4 text-rose-400" />
-              Write Hiragana Tutor
-            </button>
+          {/* Tanu Welcome Mascot */}
+          <div className="hidden lg:flex shrink-0">
+            <TanuMascot
+              pose="happy"
+              size="lg"
+              japaneseTitle="ようこそ！"
+              message="Let's study together! Master all 9 lessons and ace your midterm exam!"
+              bubblePosition="left"
+              alt="Tanu the Tanuki welcoming you to study Japanese"
+            />
           </div>
         </div>
 
@@ -379,10 +394,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col gap-3 shrink-0 w-full sm:w-auto">
+        <div className="relative z-10 flex flex-col items-center sm:items-end gap-3 shrink-0">
+          <TanuMascot
+            pose="writing"
+            size="md"
+            hideOnMobile={true}
+            japaneseTitle="ひらがな練習"
+            message="Practice stroke order with me!"
+            bubblePosition="left"
+            alt="Tanu holding a calligraphy brush teaching stroke order"
+          />
           <button
             onClick={onNavigateToWriting}
-            className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
           >
             <Edit3 className="w-4 h-4" />
             Practice Writing Hiragana

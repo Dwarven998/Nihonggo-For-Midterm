@@ -18,6 +18,7 @@ import { HiraganaCharacter, UserStudyData, MasteryStatus, CharacterGroup } from 
 import { HIRAGANA_CHARACTERS } from '../../data/hiraganaStrokes';
 import { CharacterLessonModal } from './CharacterLessonModal';
 import { soundManager } from '../../utils/audio';
+import { TanuMascot } from '../mascot/TanuMascot';
 
 interface HiraganaWritingDashboardProps {
   studyData: UserStudyData;
@@ -130,8 +131,8 @@ export const HiraganaWritingDashboard: React.FC<HiraganaWritingDashboardProps> =
     <div className="max-w-6xl mx-auto space-y-8 pb-16">
       {/* Hero Writing Header */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2 text-rose-800 text-xs font-bold uppercase tracking-wider">
               <Edit3 className="w-4 h-4" />
               <span>Interactive Hiragana Writing Tutor · 筆順練習</span>
@@ -139,28 +140,40 @@ export const HiraganaWritingDashboard: React.FC<HiraganaWritingDashboardProps> =
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               Hiragana Stroke Order & Writing Studio
             </h1>
-            <p className="text-xs sm:text-sm text-stone-600 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
               Step-by-step stroke animations, guided tracing, and independent memory writing with instant feedback. Practice course primary diacritics (Lesson 1.2), digraphs (Lesson 1.3), sokuon (Lesson 1.4), and foundational Hiragana.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 self-start sm:self-center">
-            {weakCharacters.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <TanuMascot
+              pose="writing"
+              size="md"
+              hideOnMobile={true}
+              japaneseTitle="書き順マスター"
+              message="Follow the stroke order and practice writing with me!"
+              bubblePosition="left"
+              alt="Tanu holding brush teaching writing"
+            />
+
+            <div className="flex flex-wrap gap-2 self-start sm:self-center">
+              {weakCharacters.length > 0 && (
+                <button
+                  onClick={handleLaunchWeakReview}
+                  className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Practice Weak ({weakCharacters.length})</span>
+                </button>
+              )}
               <button
-                onClick={handleLaunchWeakReview}
-                className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                onClick={handleLaunchDailyChallenge}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Practice Weak ({weakCharacters.length})</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Quick Drill</span>
               </button>
-            )}
-            <button
-              onClick={handleLaunchDailyChallenge}
-              className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Quick Writing Drill</span>
-            </button>
+            </div>
           </div>
         </div>
       </section>

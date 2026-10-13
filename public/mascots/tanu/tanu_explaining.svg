@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+    <defs>
+      <!-- Fur gradient -->
+      <linearGradient id="tanuFurGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#cf8444" />
+        <stop offset="60%" stop-color="#b86f34" />
+        <stop offset="100%" stop-color="#995222" />
+      </linearGradient>
+
+      <!-- Mask gradient -->
+      <linearGradient id="tanuMaskGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#5a2e17" />
+        <stop offset="100%" stop-color="#46200e" />
+      </linearGradient>
+
+      <!-- Belly/Snout cream gradient -->
+      <linearGradient id="tanuCreamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fff5eb" />
+        <stop offset="100%" stop-color="#faebd7" />
+      </linearGradient>
+
+      <!-- Leaf gradient -->
+      <linearGradient id="tanuLeafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#6bc242" />
+        <stop offset="100%" stop-color="#439c27" />
+      </linearGradient>
+
+      <!-- Scarf gradient -->
+      <linearGradient id="tanuScarfGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#4ea82f" />
+        <stop offset="100%" stop-color="#3b8621" />
+      </linearGradient>
+
+      <!-- Drop shadow filter -->
+      <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+        <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#2a1408" flood-opacity="0.18" />
+      </filter>
+      
+      <!-- Sparkle glow -->
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    
+  <g class="tanu-mascot" filter="url(#softShadow)">
+    
+    <!-- Fluffy Tanuki Tail with stripes -->
+    <g class="tanu-tail">
+      <path d="M 370 330 C 445 320, 485 365, 465 425 C 445 475, 380 470, 345 435 Z" fill="#995222" />
+      <path d="M 400 345 C 445 350, 465 385, 450 425 C 430 425, 380 395, 400 345 Z" fill="#46200e" opacity="0.6" />
+      <path d="M 445 380 C 475 400, 470 435, 445 450 C 425 440, 425 410, 445 380 Z" fill="#cf8444" opacity="0.5" />
+    </g>
+    
+    
+    <!-- Ears -->
+    <g class="tanu-ears">
+      <!-- Left Ear -->
+      <ellipse cx="145" cy="145" rx="42" ry="46" fill="#46200e" transform="rotate(-20 145 145)" />
+      <ellipse cx="148" cy="148" rx="26" ry="30" fill="url(#tanuCreamGrad)" transform="rotate(-20 148 148)" />
+      <path d="M 130 160 Q 148 140 165 160" stroke="#46200e" stroke-width="3" fill="none" opacity="0.3"/>
+
+      <!-- Right Ear -->
+      <ellipse cx="367" cy="145" rx="42" ry="46" fill="#46200e" transform="rotate(20 367 145)" />
+      <ellipse cx="364" cy="148" rx="26" ry="30" fill="url(#tanuCreamGrad)" transform="rotate(20 364 148)" />
+      <path d="M 347 160 Q 364 140 382 160" stroke="#46200e" stroke-width="3" fill="none" opacity="0.3"/>
+    </g>
+    
+    
+    <!-- Body -->
+    <g class="tanu-body">
+      <!-- Main body silhouette -->
+      <ellipse cx="256" cy="355" rx="140" ry="115" fill="url(#tanuFurGrad)" />
+      <!-- Cream Belly -->
+      <ellipse cx="256" cy="365" rx="90" ry="80" fill="url(#tanuCreamGrad)" />
+      <!-- Feet / Sitting paws -->
+      <ellipse cx="185" cy="452" rx="36" ry="22" fill="#46200e" />
+      <ellipse cx="327" cy="452" rx="36" ry="22" fill="#46200e" />
+      <circle cx="178" cy="448" r="6" fill="#cf8444" opacity="0.4" />
+      <circle cx="188" cy="446" r="6" fill="#cf8444" opacity="0.4" />
+      <circle cx="324" cy="446" r="6" fill="#cf8444" opacity="0.4" />
+      <circle cx="334" cy="448" r="6" fill="#cf8444" opacity="0.4" />
+    </g>
+    
+    
+    <!-- Head Base -->
+    <ellipse cx="256" cy="228" rx="146" ry="122" fill="url(#tanuFurGrad)" />
+    <!-- Cheeks Fluff outline -->
+    <path d="M 112 250 Q 95 270 120 285 Q 105 295 135 305" fill="url(#tanuFurGrad)" stroke="none" />
+    <path d="M 400 250 Q 417 270 392 285 Q 407 295 377 305" fill="url(#tanuFurGrad)" stroke="none" />
+    
+    
+    <!-- Tanuki Mask -->
+    <g class="tanu-mask">
+      <!-- Left eye patch -->
+      <path d="M 125 210 C 120 165, 215 160, 230 205 C 240 238, 195 275, 145 260 C 122 252, 126 230, 125 210 Z" fill="url(#tanuMaskGrad)" />
+      <!-- Right eye patch -->
+      <path d="M 387 210 C 392 165, 297 160, 282 205 C 272 238, 317 275, 367 260 C 390 252, 386 230, 387 210 Z" fill="url(#tanuMaskGrad)" />
+      <!-- Center mask bridge -->
+      <path d="M 220 195 Q 256 186 292 195 Q 256 215 220 195 Z" fill="url(#tanuMaskGrad)" />
+    </g>
+    
+    
+    <!-- Snout & Muzzle -->
+    <g class="tanu-snout">
+      <!-- Cream muzzle area -->
+      <path d="M 195 240 C 190 205, 322 205, 317 240 C 315 278, 197 278, 195 240 Z" fill="url(#tanuCreamGrad)" />
+      <!-- Soft blush on cheeks -->
+      <ellipse cx="148" cy="272" rx="22" ry="13" fill="#ff8a93" opacity="0.45" />
+      <ellipse cx="364" cy="272" rx="22" ry="13" fill="#ff8a93" opacity="0.45" />
+      <!-- Nose -->
+      <path d="M 248 234 Q 256 229 264 234 Q 256 244 248 234 Z" fill="#241006" />
+    </g>
+    
+    
+        <!-- Confident Teaching Eyes -->
+        <g class="tanu-eyes">
+          <ellipse cx="182" cy="214" rx="18" ry="22" fill="#150a04" />
+          <circle cx="176" cy="206" r="7" fill="#ffffff" />
+          <circle cx="188" cy="222" r="3.5" fill="#ffffff" />
+          <ellipse cx="330" cy="214" rx="18" ry="22" fill="#150a04" />
+          <circle cx="324" cy="206" r="7" fill="#ffffff" />
+          <circle cx="336" cy="222" r="3.5" fill="#ffffff" />
+        </g>
+        
+    
+        <!-- Speaking smile -->
+        <path d="M 244 246 Q 256 256 268 246" stroke="#241006" stroke-width="3" fill="none" stroke-linecap="round" />
+        
+    
+    <!-- Magic Tanuki Leaf -->
+    <g class="tanu-leaf" transform="rotate(-12 256 112)">
+      <!-- Leaf shadow -->
+      <path d="M 252 114 C 230 75, 276 52, 292 84 C 302 108, 274 122, 252 114 Z" fill="#2a5a17" opacity="0.2" />
+      <!-- Leaf body -->
+      <path d="M 250 110 C 228 70, 274 48, 290 80 C 300 104, 272 118, 250 110 Z" fill="url(#tanuLeafGrad)" />
+      <!-- Center vein -->
+      <path d="M 252 108 Q 268 86 286 82" stroke="#2a6616" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      <!-- Side veins -->
+      <path d="M 262 96 Q 258 90 252 92" stroke="#2a6616" stroke-width="1.5" fill="none" stroke-linecap="round" />
+      <path d="M 270 88 Q 278 86 280 92" stroke="#2a6616" stroke-width="1.5" fill="none" stroke-linecap="round" />
+      <!-- Little stalk -->
+      <path d="M 250 110 Q 244 116 242 122" stroke="#2a6616" stroke-width="2.5" fill="none" stroke-linecap="round" />
+    </g>
+    
+    
+    <!-- Green Bandana Scarf -->
+    <g class="tanu-scarf">
+      <!-- Neck band -->
+      <path d="M 182 308 Q 256 332 330 308 Q 306 336 256 338 Q 206 336 182 308 Z" fill="url(#tanuScarfGrad)" />
+      <!-- Knot in center -->
+      <circle cx="256" cy="336" r="13" fill="#3b8621" />
+      <!-- Left knot ribbon -->
+      <path d="M 250 342 C 242 355, 238 372, 246 376 C 252 376, 256 364, 255 348 Z" fill="#33741d" />
+      <!-- Right knot ribbon -->
+      <path d="M 262 342 C 270 355, 274 372, 266 376 C 260 376, 256 364, 257 348 Z" fill="#33741d" />
+    </g>
+    
+    
+        <!-- Left arm holding lesson book, right arm holding pointer stick -->
+        <!-- Pointer Stick -->
+        <g class="pointer-stick">
+          <line x1="330" y1="330" x2="425" y2="200" stroke="#b45309" stroke-width="6" stroke-linecap="round" />
+          <circle cx="427" cy="197" r="7" fill="#f59e0b" />
+          <!-- Right Paw holding stick -->
+          <ellipse cx="335" cy="330" rx="20" ry="17" fill="#46200e" transform="rotate(-30 335 330)" />
+        </g>
+        <!-- Lesson Book in left paw -->
+        <g class="lesson-book">
+          <rect x="140" y="315" width="48" height="60" rx="4" fill="#047857" transform="rotate(-15 140 315)" />
+          <rect x="144" y="319" width="40" height="52" rx="3" fill="#fef08a" transform="rotate(-15 144 319)" opacity="0.9" />
+          <line x1="150" y1="335" x2="175" y2="330" stroke="#047857" stroke-width="2" />
+          <line x1="152" y1="345" x2="177" y2="340" stroke="#047857" stroke-width="2" />
+          <!-- Left Paw holding book -->
+          <ellipse cx="178" cy="342" rx="18" ry="16" fill="#46200e" />
+        </g>
+        
+    
+        <!-- Scholar Mortarboard Cap -->
+        <g class="mortarboard-cap">
+          <polygon points="256,92 335,115 256,138 177,115" fill="#1c1917" stroke="#44403c" stroke-width="1.5" />
+          <path d="M 218 127 C 218 145, 294 145, 294 127" fill="#1c1917" />
+          <!-- Gold Button and Tassel -->
+          <circle cx="256" cy="115" r="4.5" fill="#f59e0b" />
+          <path d="M 256 115 Q 312 125 315 152" stroke="#f59e0b" stroke-width="2.5" fill="none" />
+          <rect x="312" y="152" width="6" height="14" rx="2" fill="#f59e0b" />
+        </g>
+        
+  </g>
+</svg>

@@ -1,20 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   XCircle,
   Bookmark,
-  Volume2,
   ArrowRight,
   RotateCcw,
   Sparkles,
   BookOpen,
   HelpCircle,
-  Filter
 } from 'lucide-react';
 import { Question, ModuleId, UserStudyData, QuizAttemptRecord } from '../types';
 import { MODULES } from '../data/modules';
 import { ALL_QUESTIONS, QUESTIONS_BY_MODULE } from '../data/questions';
 import { soundManager } from '../utils/audio';
+import { TanuMascot } from './mascot/TanuMascot';
 
 interface PracticeQuizProps {
   initialModuleId?: ModuleId | 'all';
@@ -23,6 +22,58 @@ interface PracticeQuizProps {
   onRecordQuizAttempt: (attempt: QuizAttemptRecord) => void;
   onToggleBookmark: (questionId: string) => void;
   onBackToDashboard: () => void;
+}
+
+/**
+ * Normalized string comparison helper to ensure robust, whitespace- and
+ * case-insensitive matching without subtle unicode or whitespace disparities.
+ */
+export function normalizeAnswer(ans: string | null | undefined): string {
+  if (!ans) return '';
+  return ans
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '');
+}
+
+/**
+ * Single Authoritative Source of Truth for a Question's Evaluation
+ */
+export interface QuestionValidationResult {
+  questionId: string;
+  selectedOption: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
+/**
+ * Builds a deterministic snapshot of candidate questions for a given session.
+ * Shuffled once on session start/restart; never reshuffled during an active quiz.
+ */
+function buildQuestionPool(
+  moduleFilter: ModuleId | 'all',
+  filter: 'all' | 'missed' | 'unattempted' | 'bookmarked',
+  currentStudyData: UserStudyData
+): Question[] {
+  let pool = moduleFilter === 'all' ? ALL_QUESTIONS : QUESTIONS_BY_MODULE[moduleFilter] || [];
+
+  if (filter === 'missed') {
+    pool = pool.filter((q) => {
+      const stat = currentStudyData.questionStats[q.id];
+      return stat && stat.attempts > 0 && !stat.lastResult;
+    });
+  } else if (filter === 'unattempted') {
+    pool = pool.filter(
+      (q) => !currentStudyData.questionStats[q.id] || currentStudyData.questionStats[q.id].attempts === 0
+    );
+  } else if (filter === 'bookmarked') {
+    pool = pool.filter((q) => currentStudyData.bookmarkedQuestionIds.includes(q.id));
+  }
+
+  // Randomize once for this quiz session
+  return [...pool].sort(() => Math.random() - 0.5);
 }
 
 export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
@@ -36,47 +87,65 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
   const [selectedModule, setSelectedModule] = useState<ModuleId | 'all'>(initialModuleId);
   const [filterMode, setFilterMode] = useState<'all' | 'missed' | 'unattempted' | 'bookmarked'>('all');
 
-  // Question selection pool
-  const candidateQuestions = useMemo(() => {
-    let pool = selectedModule === 'all' ? ALL_QUESTIONS : QUESTIONS_BY_MODULE[selectedModule] || [];
+  // Stable session question pool - preserved across answer recordings
+  const [candidateQuestions, setCandidateQuestions] = useState<Question[]>(() =>
+    buildQuestionPool(initialModuleId, 'all', studyData)
+  );
 
-    if (filterMode === 'missed') {
-      pool = pool.filter((q) => {
-        const stat = studyData.questionStats[q.id];
-        return stat && stat.attempts > 0 && !stat.lastResult;
-      });
-    } else if (filterMode === 'unattempted') {
-      pool = pool.filter((q) => !studyData.questionStats[q.id] || studyData.questionStats[q.id].attempts === 0);
-    } else if (filterMode === 'bookmarked') {
-      pool = pool.filter((q) => studyData.bookmarkedQuestionIds.includes(q.id));
-    }
-
-    // Default randomize
-    return [...pool].sort(() => Math.random() - 0.5);
-  }, [selectedModule, filterMode, studyData]);
+  // Sync if initialModuleId prop explicitly changes from parent navigation
+  useEffect(() => {
+    setSelectedModule(initialModuleId);
+    setFilterMode('all');
+    setCandidateQuestions(buildQuestionPool(initialModuleId, 'all', studyData));
+    setCurrentIndex(0);
+    setSelectedOption(null);
+    setValidationResult(null);
+    setCorrectCount(0);
+    setAttemptedHistory([]);
+    setQuizCompleted(false);
+  }, [initialModuleId]);
 
   // Quiz execution state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [validationResult, setValidationResult] = useState<QuestionValidationResult | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
-  const [attemptedHistory, setAttemptedHistory] = useState<{ id: string; correct: boolean }[]>([]);
+  const [attemptedHistory, setAttemptedHistory] = useState<
+    { id: string; correct: boolean; selectedOption: string }[]
+  >([]);
   const [quizCompleted, setQuizCompleted] = useState(false);
 
-  // Current question
+  // Current question from stable session pool
   const currentQuestion: Question | undefined = candidateQuestions[currentIndex];
 
   const handleSelectOption = (opt: string) => {
-    if (isSubmitted) return;
+    // Lock answer selection once submitted
+    if (validationResult !== null) return;
     setSelectedOption(opt);
   };
 
   const handleSubmitAnswer = () => {
-    if (!currentQuestion || selectedOption === null || isSubmitted) return;
+    // Prevent submission if no question, no selection, or already validated
+    if (!currentQuestion || selectedOption === null || validationResult !== null) return;
 
-    const isCorrect = selectedOption.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
+    // 1. Retrieve authoritative correct answer
+    const authoritativeCorrect = currentQuestion.correctAnswer;
 
-    setIsSubmitted(true);
+    // 2. Compare using normalized values
+    const isCorrect = normalizeAnswer(selectedOption) === normalizeAnswer(authoritativeCorrect);
+
+    // 3. Establish the single source of truth for this question's outcome
+    const result: QuestionValidationResult = {
+      questionId: currentQuestion.id,
+      selectedOption,
+      correctAnswer: authoritativeCorrect,
+      isCorrect,
+      explanation: currentQuestion.explanation,
+    };
+
+    setValidationResult(result);
+
+    // 4. Update score once and play auditory feedback
     if (isCorrect) {
       setCorrectCount((prev) => prev + 1);
       soundManager.playCorrectChime(studyData.soundEnabled);
@@ -84,28 +153,33 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
       soundManager.playIncorrectChime(studyData.soundEnabled);
     }
 
+    // 5. Persist answer to study progress state and local session history
     onRecordAnswer(currentQuestion.id, isCorrect);
-    setAttemptedHistory((prev) => [...prev, { id: currentQuestion.id, correct: isCorrect }]);
+    setAttemptedHistory((prev) => [
+      ...prev,
+      { id: currentQuestion.id, correct: isCorrect, selectedOption }
+    ]);
   };
 
   const handleNextQuestion = () => {
     if (currentIndex + 1 < candidateQuestions.length) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);
-      setIsSubmitted(false);
+      setValidationResult(null);
     } else {
       // Quiz complete
       setQuizCompleted(true);
       const total = candidateQuestions.length;
-      const score = correctCount + (selectedOption === currentQuestion?.correctAnswer ? 1 : 0);
-      const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+      // Note: correctCount already accurately contains total points awarded
+      const finalScore = correctCount;
+      const percentage = total > 0 ? Math.round((finalScore / total) * 100) : 0;
 
       const record: QuizAttemptRecord = {
         id: `quiz-${Date.now()}`,
         timestamp: Date.now(),
         mode: 'practice',
         moduleId: selectedModule,
-        score,
+        score: finalScore,
         totalQuestions: total,
         percentage,
         timeSpentSeconds: 0,
@@ -117,14 +191,16 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
   };
 
   const handleRestartQuiz = (
-    newModule?: ModuleId | 'all',
-    newFilter?: 'all' | 'missed' | 'unattempted' | 'bookmarked'
+    newModule: ModuleId | 'all' = selectedModule,
+    newFilter: 'all' | 'missed' | 'unattempted' | 'bookmarked' = filterMode
   ) => {
-    if (newModule !== undefined) setSelectedModule(newModule);
-    if (newFilter !== undefined) setFilterMode(newFilter);
+    setSelectedModule(newModule);
+    setFilterMode(newFilter);
+    const newPool = buildQuestionPool(newModule, newFilter, studyData);
+    setCandidateQuestions(newPool);
     setCurrentIndex(0);
     setSelectedOption(null);
-    setIsSubmitted(false);
+    setValidationResult(null);
     setCorrectCount(0);
     setAttemptedHistory([]);
     setQuizCompleted(false);
@@ -153,10 +229,7 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
         </div>
         <div className="flex flex-wrap justify-center gap-3">
           <button
-            onClick={() => {
-              setFilterMode('all');
-              handleRestartQuiz(selectedModule, 'all');
-            }}
+            onClick={() => handleRestartQuiz(selectedModule, 'all')}
             className="px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
           >
             Practice All Questions ({selectedModule === 'all' ? ALL_QUESTIONS.length : (QUESTIONS_BY_MODULE[selectedModule]?.length || 0)} Qs)
@@ -182,8 +255,12 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
     return (
       <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
         <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center mx-auto text-2xl font-bold">
-            {percentage >= 80 ? '🌸' : percentage >= 60 ? '✨' : '📖'}
+          <div className="flex justify-center mb-2">
+            <TanuMascot
+              pose={percentage >= 80 ? 'celebration' : percentage >= 60 ? 'happy' : 'encouraging'}
+              size="lg"
+              alt="Tanu celebrating quiz completion"
+            />
           </div>
 
           <div className="space-y-1">
@@ -255,6 +332,7 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
     : false;
 
   const currentModuleInfo = MODULES.find((m) => m.id === currentQuestion?.moduleId);
+  const isSubmitted = validationResult !== null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-16">
@@ -395,76 +473,154 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
           <div className="space-y-2.5">
             {currentQuestion.options.map((opt, i) => {
               const isSelected = selectedOption === opt;
-              const isCorrectOption = opt.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
 
               let containerStyle =
                 'border-stone-200 bg-white hover:bg-stone-50/80 text-slate-800';
 
               if (isSelected && !isSubmitted) {
+                // Clear selection state before submission without revealing correctness
                 containerStyle =
-                  'border-rose-600 bg-rose-50/60 text-rose-950 font-semibold ring-1 ring-rose-500';
+                  'border-rose-600 bg-rose-50/70 text-rose-950 font-semibold ring-2 ring-rose-500 shadow-xs';
               }
 
-              if (isSubmitted) {
-                if (isCorrectOption) {
+              if (isSubmitted && validationResult) {
+                const isThisTheCorrectAnswer =
+                  normalizeAnswer(opt) === normalizeAnswer(validationResult.correctAnswer);
+                const isThisUserSelectedWrong =
+                  isSelected && !validationResult.isCorrect;
+
+                if (isThisTheCorrectAnswer) {
+                  // The authoritative correct option is highlighted in emerald green
                   containerStyle =
-                    'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold ring-1 ring-emerald-500';
-                } else if (isSelected && !isCorrectOption) {
+                    'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold ring-2 ring-emerald-500 shadow-xs';
+                } else if (isThisUserSelectedWrong) {
+                  // User's wrong selection is marked in rose red
                   containerStyle =
-                    'border-rose-600 bg-rose-50 text-rose-950 font-semibold ring-1 ring-rose-500';
+                    'border-rose-600 bg-rose-50 text-rose-950 font-semibold ring-2 ring-rose-500 shadow-xs';
                 } else {
+                  // Unselected options are muted
                   containerStyle = 'border-stone-200 bg-stone-50/40 text-stone-400 opacity-60';
                 }
               }
 
+              const isThisCorrect =
+                isSubmitted &&
+                validationResult !== null &&
+                normalizeAnswer(opt) === normalizeAnswer(validationResult.correctAnswer);
+              const isThisWrongSelection =
+                isSubmitted &&
+                validationResult !== null &&
+                isSelected &&
+                !validationResult.isCorrect;
+
               return (
                 <button
-                  key={i}
+                  key={`${currentQuestion.id}-opt-${i}`}
                   disabled={isSubmitted}
                   onClick={() => handleSelectOption(opt)}
-                  className={`w-full p-3.5 sm:p-4 text-left rounded-xl border transition-all flex items-start gap-3 cursor-pointer text-sm sm:text-base ${containerStyle}`}
+                  className={`w-full p-3.5 sm:p-4 text-left rounded-xl border transition-all flex items-start gap-3 text-sm sm:text-base ${
+                    isSubmitted ? 'cursor-default' : 'cursor-pointer'
+                  } ${containerStyle}`}
                 >
-                  <span className="w-6 h-6 rounded-md bg-stone-100 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0 mt-0.5">
+                  <span
+                    className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-colors ${
+                      isThisCorrect
+                        ? 'bg-emerald-600 text-white'
+                        : isThisWrongSelection
+                        ? 'bg-rose-600 text-white'
+                        : isSelected && !isSubmitted
+                        ? 'bg-rose-700 text-white'
+                        : 'bg-stone-100 text-slate-600'
+                    }`}
+                  >
                     {String.fromCharCode(65 + i)}
                   </span>
                   <span className="flex-1 leading-relaxed">{opt}</span>
-                  {isSubmitted && isCorrectOption && (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+
+                  {/* Visual badges for submitted answer state */}
+                  {isThisCorrect && (
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 shrink-0 mt-0.5">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      <span className="hidden sm:inline">Correct Answer</span>
+                    </span>
                   )}
-                  {isSubmitted && isSelected && !isCorrectOption && (
-                    <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  {isThisWrongSelection && (
+                    <span className="flex items-center gap-1 text-xs font-bold text-rose-700 shrink-0 mt-0.5">
+                      <XCircle className="w-5 h-5 text-rose-600" />
+                      <span className="hidden sm:inline">Your Answer</span>
+                    </span>
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Explanation Callout (after submission) */}
-          {isSubmitted && (
+          {/* Explanation Callout (governed strictly by single validationResult source of truth) */}
+          {validationResult && (
             <div
-              className={`p-4 sm:p-5 rounded-xl border text-xs sm:text-sm space-y-2.5 ${
-                selectedOption?.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase()
-                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                  : 'bg-rose-50/70 border-rose-200 text-rose-950'
+              className={`p-4 sm:p-5 rounded-xl border text-xs sm:text-sm space-y-3 transition-all ${
+                validationResult.isCorrect
+                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                  : 'bg-rose-50/80 border-rose-200 text-rose-950'
               }`}
             >
-              <div className="flex items-center gap-2 font-bold">
-                {selectedOption?.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase() ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>正解 (Correct!)</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-4 h-4 text-rose-600" />
-                    <span>不正解 (Incorrect) — Correct Answer: {currentQuestion.correctAnswer}</span>
-                  </>
-                )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 font-bold text-sm sm:text-base">
+                  {validationResult.isCorrect ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-emerald-900">正解 (Correct!)</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                      <span className="text-rose-900">不正解 (Incorrect)</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Tanu Mascot encouragement */}
+                <div className="shrink-0 hidden sm:block">
+                  <TanuMascot
+                    pose={validationResult.isCorrect ? 'happy' : 'encouraging'}
+                    size="xs"
+                    animated={false}
+                    alt={
+                      validationResult.isCorrect
+                        ? 'Tanu celebrating your correct answer'
+                        : 'Tanu encouraging you to review'
+                    }
+                  />
+                </div>
               </div>
 
-              <p className="leading-relaxed text-stone-700">
-                {currentQuestion.explanation}
-              </p>
+              {/* Explicit Breakdown when answer is incorrect */}
+              {!validationResult.isCorrect && (
+                <div className="bg-white/80 border border-rose-200 rounded-lg p-3 space-y-1.5 text-xs text-slate-800">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-rose-700 shrink-0">Your selection:</span>
+                    <span className="line-through text-stone-600 font-medium">
+                      {validationResult.selectedOption}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-700 shrink-0">Correct answer:</span>
+                    <span className="font-bold text-emerald-950">
+                      {validationResult.correctAnswer}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Authoritative Explanation */}
+              <div className="space-y-1">
+                <div className="font-bold text-[11px] uppercase tracking-wider text-stone-500">
+                  Explanation & Lecture Notes
+                </div>
+                <p className="leading-relaxed text-stone-700">
+                  {validationResult.explanation}
+                </p>
+              </div>
 
               <div className="pt-2 border-t border-black/10 flex items-center justify-between text-[11px] text-stone-500 font-medium">
                 <span>
@@ -477,7 +633,7 @@ export const PracticeQuiz: React.FC<PracticeQuizProps> = ({
             </div>
           )}
 
-          {/* Action Button: Submit or Next */}
+          {/* Action Buttons: Submit or Next */}
           <div className="pt-2 flex items-center justify-between">
             <span className="text-xs text-stone-400">
               {isSubmitted ? 'Proceed to next question' : 'Select an answer above'}
